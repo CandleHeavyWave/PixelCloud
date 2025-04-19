@@ -316,27 +316,52 @@ class FileCard(CardWidget):
         self.icon_widget.setFixedSize(24, 24)
         self.title_label = BodyLabel(self.info["file_name"], self)
         self.tool_command_bar = CommandBar()
-        self.tool_command_bar.addActions([Action(FluentIcon.DOWNLOAD, '下载', triggered=lambda: print("下载")),
-                                          Action(FluentIcon.DELETE, '删除', triggered=lambda: print("下载"))])
+        self.tool_command_bar.addAction(Action(FluentIcon.DELETE, '删除', triggered=lambda: print("下载")))
         self.date_lable = BodyLabel(self.info["file_upload_data"], self)
         setFont(self.date_lable, 12)
         self.date_lable.setTextColor("#606060", "#d2d2d2")
+        self.progress_bar = ProgressBar()
+        self.progress_bar.setFixedWidth(150)
+        self.progress_bar.setRange(0, 100)
+
+        self.progress_label = BodyLabel("正在合成视频", self)
+        setFont(self.progress_label, 12)
+        self.progress_label.setTextColor("#606060", "#d2d2d2")
+        self.progress_bar.hide()
+        self.progress_bar.setValue(50)
+        self.progress_label.hide()
+
+        if self.info["type"] == "progress":
+            self.date_lable.hide()
+            self.progress_bar.show()
+            self.progress_label.show()
+        else:
+            self.tool_command_bar.addAction(Action(FluentIcon.DOWNLOAD, '下载', triggered=lambda: print("下载")))
 
         self.hbox_layout = QHBoxLayout(self)
         self.vbox_layout = QVBoxLayout()
+        self.pbox_layout = QHBoxLayout()
 
         self.hbox_layout.setSpacing(15)
-        self.hbox_layout.addWidget(self.icon_widget)
-        self.hbox_layout.setContentsMargins(20, 0, 20, 0)
+        self.hbox_layout.setContentsMargins(20, 0, 0, 0)
 
         self.vbox_layout.setContentsMargins(0, 0, 0, 0)
         self.vbox_layout.setSpacing(15)
         self.vbox_layout.addWidget(self.title_label, 0, Qt.AlignVCenter)
         self.vbox_layout.setAlignment(Qt.AlignVCenter)
 
+        self.pbox_layout.setSpacing(15)
+        self.pbox_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.pbox_layout.addWidget(self.progress_bar)
+        self.pbox_layout.addWidget(self.progress_label)
+
+        self.hbox_layout.addWidget(self.icon_widget)
         self.hbox_layout.addLayout(self.vbox_layout)
         self.hbox_layout.addStretch(1)
-        self.hbox_layout.addWidget(self.tool_command_bar, 0, Qt.AlignRight)
+        self.hbox_layout.addLayout(self.pbox_layout)
+        self.hbox_layout.addStretch(1)
+        self.hbox_layout.addWidget(self.tool_command_bar)
         self.hbox_layout.addWidget(self.date_lable)
 
     def __init__(self, parent, info):
@@ -352,43 +377,60 @@ class UploadPage(QFrame):
         self.pan_background = biliPan.BiliPan(setting)
         self.init_ui()
 
+    def add_task(self, info):
+        card = FileCard(self, {"type": "progress", "file_name": "1.jpg", "file_type": "jpg", "file_upload_data": "2025/4/19 11:40"})
+        self.pan_list_layout.addWidget(card)
+
     def init_ui(self):
-        self.pan_layout = QVBoxLayout()
+        self.uplaod_layout = QVBoxLayout()
 
-        self.pan_label = QLabel("上传", self)
-        self.pan_label.setStyleSheet("QLabel {font-family: 微软雅黑; font-weight: bold}")
+        self.uplaod_label = QLabel("我的网盘", self)
 
-        self.pan_label_command_bar = CommandBar()
-        self.pan_label_command_bar.addAction(Action(FluentIcon.DELETE, '删除', triggered=lambda: print("添加")))
+        setFont(self.uplaod_label, 20)
+        self.uplaod_label.setStyleSheet("QLabel {font-family: 微软雅黑; font-weight: bold}")
 
-        setFont(self.pan_label, 20)
+        self.pan_tool_layout= QHBoxLayout()
+        self.delete_button = TransparentPushButton(FluentIcon.DELETE, '删除任务')
+        self.delete_button.clicked.connect(print)
+        setFont(self.delete_button, 15)
+        self.search_file_line_edit = SearchLineEdit()
+        self.search_file_line_edit.setPlaceholderText("搜索文件")
+        self.search_file_line_edit.searchSignal.connect(lambda text: print("搜索：" + text))
 
-        self.head_label_layout = QHBoxLayout()
-        self.head_label_layout.addWidget(self.pan_label)
-        self.head_label_layout.setSpacing(20)
-        self.head_label_layout.addStretch(1)
-        self.head_label_layout.addWidget(self.pan_label_command_bar)
+        self.pan_tool_layout.setSpacing(15)
+        self.pan_tool_layout.addWidget(self.delete_button)
+        self.pan_tool_layout.addWidget(self.search_file_line_edit)
+        self.pan_tool_layout.addStretch(1)
+
+        self.head_label_layout = QVBoxLayout()
+        self.head_label_layout.addWidget(self.uplaod_label)
+        self.head_label_layout.addLayout(self.pan_tool_layout)
 
         self.pan_list_layout = QVBoxLayout()
 
-        self.pan_layout.addLayout(self.head_label_layout)
-        self.pan_layout.addLayout(self.pan_list_layout)
-        self.pan_layout.addStretch(1)
-        self.pan_layout.setSpacing(20)
-        self.pan_layout.setContentsMargins(20, 20, 20, 20)
-        self.setLayout(self.pan_layout)
+        self.uplaod_layout.addLayout(self.head_label_layout)
+        self.uplaod_layout.addLayout(self.pan_list_layout)
+        self.uplaod_layout.addStretch(1)
+        self.uplaod_layout.setContentsMargins(20, 20, 20, 20)
+        self.uplaod_layout.setSpacing(15)
+        self.setLayout(self.uplaod_layout)
+
+        self.add_task({})
 
 
 class PanPage(QFrame):
-    def __init__(self, parent, setting):
+    def __init__(self, parent, uplaod_page, download_page, setting):
         super().__init__(parent)
         self.setObjectName("my-pan".replace(' ', '-'))
         self.bili_pan = biliPan.BiliPan(setting)
+        self.uplaod_page = uplaod_page
+        self.download_page = download_page
         self.init_ui()
 
     def upload_file(self):
         file_path = filedialog.askopenfilename(title="选择文件")
         self.bili_pan.upload_file(file_path, "")
+
 
     def init_ui(self):
         self.pan_layout = QVBoxLayout()
@@ -404,7 +446,7 @@ class PanPage(QFrame):
         setFont(self.upload_button, 15)
         self.search_file_line_edit = SearchLineEdit()
         self.search_file_line_edit.setPlaceholderText("搜索文件")
-        self.search_file_line_edit .searchSignal.connect(lambda text: print("搜索：" + text))
+        self.search_file_line_edit.searchSignal.connect(lambda text: print("搜索：" + text))
 
         self.pan_tool_layout.setSpacing(15)
         self.pan_tool_layout.addWidget(self.upload_button)
@@ -416,7 +458,7 @@ class PanPage(QFrame):
         self.head_label_layout.addLayout(self.pan_tool_layout)
 
         self.pan_list_layout = QVBoxLayout()
-        card = FileCard(self, {"file_name": "1.jpg", "file_type": "jpg", "file_upload_data": "2025/4/19 11:40"})
+        card = FileCard(self, {"file_name": "1.jpg", "file_type": "jpg", "file_upload_data": "2025/4/19 11:40", "type": ""})
         self.pan_list_layout.addWidget(card)
 
         self.pan_layout.addLayout(self.head_label_layout)
@@ -458,9 +500,9 @@ class Window(FluentWindow):
 
     def init_navigation(self):
         self.users_list_interface = UsersListPage(self, self.setting)
-        self.pan_interface = PanPage(self, self.setting)
         self.download_interface = Widget('下载', self)
         self.upload_interface = UploadPage(self, self.setting)
+        self.pan_interface = PanPage(self, self.upload_interface, self.download_interface, self.setting)
         self.about_interface = Widget('关于', self)
         self.setting_interface = Widget('设置', self)
 
