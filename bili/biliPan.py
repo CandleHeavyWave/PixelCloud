@@ -135,7 +135,7 @@ class BiliPan:
                 task_id,
                 download_dir,
                 out_path,
-                "f9.jpg",
+                file_name,
                 temp_path,
                 progress,
                 self.setting

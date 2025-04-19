@@ -62,7 +62,7 @@ class BiliBiliLogin:
                 "https://api.bilibili.com/x/web-interface/nav",
                 session=session
             )
-            print(response)
+
             cookies_list.append({
                 "number": i,
                 "mid": mid,
@@ -76,9 +76,11 @@ class BiliBiliLogin:
         return cookies_list
 
     def get_qrcode_img(self):
+        params = {"source": "source=main-fe-header"}
         response = self._api_request.get_response(
             "GET",
-            "https://passport.bilibili.com/x/passport-login/web/qrcode/generate?source=main-fe-header"
+            "https://passport.bilibili.com/x/passport-login/web/qrcode/generate",
+            params=params
         )
 
         qrcode_key = response['data']['qrcode_key']
@@ -90,9 +92,11 @@ class BiliBiliLogin:
     def pollQrcode(self, qrcode_key: str, number: str):
         session = self.init_session(number)
         while True:
+            params = {"qrcode_key": qrcode_key, "source": "source=main-fe-header"}
             response = self._api_request.get_response(
                 "GET",
-                f"https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key={qrcode_key}&source=main-fe-header"
+                f"https://passport.bilibili.com/x/passport-login/web/qrcode/poll",
+                params=params
             )
 
             data = response.get('data', {})
